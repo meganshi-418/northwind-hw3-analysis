@@ -53,7 +53,7 @@
   <div class="kpi"><b>$total_revenue</b><span>Revenue after discounts, Jul 1996 – May 1998</span></div>
   <div class="kpi"><b>$growth_pct</b><span>Revenue growth, Jan–Apr 1998 vs Jan–Apr 1997</span></div>
   <div class="kpi"><b>$top10_share</b><span>Share of revenue from the top 10 customers</span></div>
-  <div class="kpi"><b>$cap_savings</b><span>Discount dollars beyond a 5% cap (Jul 1996 – May 1998)</span></div>
+  <div class="kpi"><b>$cap10_savings</b><span>Discount dollars beyond a 10% cap, where extra depth bought no extra volume</span></div>
 </div>
 
 <nav class="toc"><strong>Questions</strong>
@@ -140,21 +140,39 @@
   $n_odd_discounts lines with unusual 1–6% discounts were excluded; they are too few to analyse.</p>
   <div class="chart">$fig_discount</div>
   <div class="tablewrap">$discount_table</div>
+  <p>Two further checks test whether the pattern holds up. (1) Among discounted lines only, I fitted
+  relative quantity against discount depth, with a bootstrap 95% interval for the slope. (2) Because
+  larger customers may simply receive more discounts, I compared each customer <em>with themselves</em>:
+  for customers who bought at two different discount bands, I compared their average relative quantity
+  in each band.</p>
   <h3>Main finding</h3>
-  <div class="finding">Discounted lines are larger: at 5% off, the mean relative quantity is
-  $rq5, compared with 1.00 for undiscounted lines. However, deeper discounts add almost nothing on top
-  of that. At 10% the mean is $rq10, and at 25% it is $rq25. The box plots for 5% to 25% overlap almost
-  completely. Yet discounts of 15% or more account for $deep_discount_share of all discount
-  dollars.</div>
+  <div class="finding"><p style="margin:0 0 8px"><strong>Deep discounts buy nothing extra.</strong>
+  Among discounted lines, each additional point of discount changes relative quantity by $slope
+  (95% CI $slope_ci), which is effectively zero. The $wc_deep_n customers who received both 5–10% and
+  15–25% discounts placed orders of the same size at either depth (median difference $wc_deep_diff;
+  deeper orders were larger for only $wc_deep_share of them). Yet discounts of 15% or more account for
+  $deep_discount_share of all discount dollars.</p>
+  <p style="margin:0 0 8px"><strong>5% and 10% cannot be told apart.</strong> Mean relative quantity is
+  $rq5 at 5% (95% CI $ci5) and $rq10 at 10% (95% CI $ci10). Within the $wc_5v10_n customers who received
+  both, the median difference is $wc_5v10_diff.</p>
+  <p style="margin:0"><strong>Even the benefit of a small discount is uncertain.</strong> Across all
+  lines, discounted orders look about 30% larger than undiscounted ones. Within the same customer the gap
+  shrinks to a median of $wc_any_diff, and only $wc_any_share of $wc_any_n customers order more when
+  discounted. Most of the raw gap reflects <em>which</em> customers get discounts, not what the discount
+  does.</p></div>
   <h3>Business implication</h3>
-  <div class="implication">Make 5% the standard discount and require manager approval for anything
-  higher. If order sizes stayed the same, capping all discounts at 5% would have kept
-  $cap_savings ($cap_savings_pct of revenue). The flat pattern from 5% to 25% suggests sizes would
-  not fall much.</div>
-  <p class="caveat">Caveat: this is observational data. Sales reps may give discounts <em>because</em>
-  an order is large (a volume discount), not the other way round. A controlled test, for example
-  offering 5% to half of new quotes and 15% to the other half, would settle the question before
-  rolling out the policy.</p>
+  <div class="implication"><p style="margin:0 0 8px"><strong>Now:</strong> cap discounts at 10% and require
+  manager approval above that. This removes the 15–25% tiers, where the evidence of no extra volume is
+  strongest. At historical order sizes it would have kept $cap10_savings ($cap10_savings_pct of
+  revenue).</p>
+  <p style="margin:0"><strong>Next:</strong> run a simple test before going lower. Randomly offer 5% or
+  10% on new quotes for a quarter and compare order sizes and reorder rates. A 5% cap would keep a
+  further $cap_gap, but the historical data cannot show whether 5% loses volume compared with 10%,
+  so that step should wait for the test.</p></div>
+  <p class="caveat">Caveat: this is observational data. Reps may give discounts <em>because</em> an order is
+  large (reverse causality), and discounts may go to customers who would have ordered more anyway
+  (selection). The within-customer comparison reduces but does not remove these effects. The savings
+  figures assume order sizes stay the same.</p>
 </section>
 
 <!-- Q4 -->

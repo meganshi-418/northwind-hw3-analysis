@@ -33,7 +33,7 @@ python build_site.py
 | `outputs/summary.json` | Headline figures, printed to the terminal as well |
 | `outputs/q1_*.csv` | Monthly revenue; revenue by country for Jan–Apr 1997 vs 1998 |
 | `outputs/q2_*.csv` | Customer revenue ranking with cumulative share; lapsed customers |
-| `outputs/q3_discount_levels.csv` | Relative order size and revenue given away at each discount level |
+| `outputs/q3_discount_levels.csv` | Relative order size (with 95% CI) and revenue given away at each discount level; robustness statistics are in `summary.json` |
 | `outputs/q4_*.csv` | Late-shipment rates with 95% Wilson intervals, by delivery window and by shipper |
 | `outputs/q5_inventory_cover.csv` | Sales rate, months of cover and stock status for every product |
 
@@ -65,6 +65,7 @@ Every function has a Google-style docstring, written with the course `python-doc
 - **Time window:** orders run from 1996-07-04 to 1998-05-06. May 1998 is partial, so trends stop at April 1998 and growth compares Jan–Apr 1998 with Jan–Apr 1997.
 - **Lapsed customer:** at least 3 orders, and days since the last order (as of 1998-05-06) greater than twice the customer's average gap between orders.
 - **Relative quantity:** an order line's quantity divided by the average undiscounted quantity for the same product. The 8 lines with non-standard 1–6% discounts are excluded.
+- **Discount robustness checks (Q3):** bootstrap 95% intervals per discount level (4,000 resamples, seed 0); slope of relative quantity on discount depth among discounted lines; within-customer comparisons between discount bands. Savings are shown for a 10% cap (the recommendation) and a 5% cap (to be decided by a test).
 - **Late:** `ShippedDate > RequiredDate`. The 21 orders not yet shipped are excluded.
 - **Months of cover:** (UnitsInStock + UnitsOnOrder) ÷ average monthly units sold, Nov 1997 – Apr 1998. The stock figures are an undated snapshot and are treated as the position at the end of the order data.
 - The extra columns in the Product sheet (`Cheap`, `NewPrice`, `IsCheap`, `Cheap.1`, `NewPrice.1`, `Unnamed: 14`) come from an earlier exercise and are not used.

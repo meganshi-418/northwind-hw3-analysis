@@ -9,6 +9,27 @@
   "customers_for_80pct": 34,
   "total_discount": 88665.55,
   "discount_cap_5pct_savings": 58483.89,
+  "discount_cap_10pct_savings": 36082.77,
+  "discount_slope_per_pt": 0.0043,
+  "discount_slope_ci": [
+    -0.0072,
+    0.0157
+  ],
+  "within_customer_0_vs_5_10": {
+    "customers": 50,
+    "median_diff": 0.05121183571495547,
+    "share_higher": 0.58
+  },
+  "within_customer_5_10_vs_15_25": {
+    "customers": 50,
+    "median_diff": -0.018174201277583346,
+    "share_higher": 0.48
+  },
+  "within_customer_5_vs_10": {
+    "customers": 29,
+    "median_diff": -0.005485373183525932,
+    "share_higher": 0.4827586206896552
+  },
   "late_rate_14d_pct": 17.6,
   "late_rate_28d_pct": 3.7,
   "stockout_risk_products": 29,

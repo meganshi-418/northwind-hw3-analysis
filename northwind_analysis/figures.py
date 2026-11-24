@@ -132,12 +132,12 @@ def fig_discount_box(standard, by_level):
     Args:
         standard (pandas.DataFrame): Kept lines from
             ``discount_effect``.
-        by_level (pandas.DataFrame): Per-level summary from
-            ``discount_effect``.
+        by_level (pandas.DataFrame): Per-level summary with
+            intervals, from ``add_level_cis``.
 
     Returns:
         plotly.graph_objects.Figure: One box per discount level with a
-        marker at each level's mean.
+        marker and 95% interval at each level's mean.
     """
     fig = go.Figure()
     for pct in sorted(standard["DiscountPct"].unique()):
@@ -153,11 +153,19 @@ def fig_discount_box(standard, by_level):
     fig.add_scatter(
         x=[f"{p}%" for p in by_level["DiscountPct"]],
         y=by_level["MeanRelativeQty"],
+        error_y=dict(
+            type="data",
+            symmetric=False,
+            array=by_level["MeanCIHigh"] - by_level["MeanRelativeQty"],
+            arrayminus=by_level["MeanRelativeQty"] - by_level["MeanCILow"],
+            color="#222",
+            thickness=1.5,
+        ),
         mode="markers+text",
         marker=dict(symbol="diamond", size=11, color=AMBER, line=dict(color="#222", width=1)),
         text=[f"{v:.2f}" for v in by_level["MeanRelativeQty"]],
         textposition="top center",
-        name="Mean",
+        name="Mean with bootstrap 95% CI",
         hovertemplate="Mean relative quantity: %{y:.2f}<extra></extra>",
     )
     fig.update_layout(

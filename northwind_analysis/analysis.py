@@ -284,3 +284,111 @@ def inventory_cover(tables, lines, start="1997-11-01", end=LAST_FULL_MONTH_END):
 
     products["Status"] = products.apply(status, axis=1)
     return products, months
+
+
+def bootstrap_mean_ci(values, n_boot=4000, seed=0):
+    """Compute a percentile bootstrap 95% interval for a mean.
+
+    Args:
+        values (array-like of float): Sample values.
+        n_boot (int): Number of bootstrap resamples.
+        seed (int): Random seed, fixed so results are reproducible.
+
+    Returns:
+        tuple[float, float]: 2.5th and 97.5th percentiles of the
+        resampled means.
+    """
+    values = np.asarray(values, dtype=float)
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, len(values), size=(n_boot, len(values)))
+    means = values[idx].mean(axis=1)
+    return float(np.percentile(means, 2.5)), float(np.percentile(means, 97.5))
+
+
+def add_level_cis(standard, by_level, n_boot=4000, seed=0):
+    """Add bootstrap 95% intervals for mean relative quantity per level.
+
+    Args:
+        standard (pandas.DataFrame): Kept lines from ``discount_effect``.
+        by_level (pandas.DataFrame): Per-level summary from
+            ``discount_effect``.
+        n_boot (int): Number of bootstrap resamples per level.
+        seed (int): Random seed.
+
+    Returns:
+        pandas.DataFrame: Copy of ``by_level`` with ``MeanCILow`` and
+        ``MeanCIHigh`` columns.
+    """
+    out = by_level.copy()
+    bounds = [
+        bootstrap_mean_ci(
+            standard.loc[standard["DiscountPct"] == p, "RelativeQty"], n_boot, seed
+        )
+        for p in out["DiscountPct"]
+    ]
+    out["MeanCILow"] = [lo for lo, _ in bounds]
+    out["MeanCIHigh"] = [hi for _, hi in bounds]
+    return out
+
+
+def discount_slope(standard, n_boot=4000, seed=0):
+    """Fit relative quantity against discount depth on discounted lines.
+
+    Args:
+        standard (pandas.DataFrame): Kept lines from ``discount_effect``.
+        n_boot (int): Number of bootstrap resamples for the interval.
+        seed (int): Random seed.
+
+    Returns:
+        tuple[float, float, float]: Slope (change in relative quantity
+        per extra percentage point of discount) and its bootstrap 95%
+        interval bounds.
+    """
+    discounted = standard[standard["DiscountPct"] > 0]
+    x = discounted["DiscountPct"].to_numpy(dtype=float)
+    y = discounted["RelativeQty"].to_numpy(dtype=float)
+    rng = np.random.default_rng(seed)
+    slopes = []
+    for _ in range(n_boot):
+        idx = rng.integers(0, len(x), len(x))
+        slopes.append(np.polyfit(x[idx], y[idx], 1)[0])
+    return (
+        float(np.polyfit(x, y, 1)[0]),
+        float(np.percentile(slopes, 2.5)),
+        float(np.percentile(slopes, 97.5)),
+    )
+
+
+def within_customer_comparison(standard, low_levels, high_levels):
+    """Compare relative quantity between two discount bands per customer.
+
+    Only customers with lines in both bands are used, so each customer
+    is compared with themselves.
+
+    Args:
+        standard (pandas.DataFrame): Kept lines from ``discount_effect``.
+        low_levels (list[int]): Discount percentages in the lower band.
+        high_levels (list[int]): Discount percentages in the higher
+            band.
+
+    Returns:
+        dict[str, float]: ``customers`` (count), ``median_diff``
+        (higher band minus lower band, median across customers) and
+        ``share_higher`` (fraction of customers whose higher-band
+        orders were larger).
+    """
+    band = np.where(
+        standard["DiscountPct"].isin(low_levels),
+        "low",
+        np.where(standard["DiscountPct"].isin(high_levels), "high", None),
+    )
+    subset = standard.assign(Band=band).dropna(subset=["Band"])
+    means = (
+        subset.groupby(["CustomerID", "Band"])["RelativeQty"].mean().unstack().dropna()
+    )
+    diff = means["high"] - means["low"]
+    return {
+        "customers": int(len(means)),
+        "median_diff": float(diff.median()),
+        "share_higher": float((diff > 0).mean()),
+    }

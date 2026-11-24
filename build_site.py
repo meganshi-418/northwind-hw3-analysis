@@ -118,6 +118,12 @@ def run(data_path, out_dir, site_dir):
 
     # Q3: discounts
     standard, by_level = analysis.discount_effect(lines)
+    by_level = analysis.add_level_cis(standard, by_level)
+    slope, slope_lo, slope_hi = analysis.discount_slope(standard)
+    wc_any = analysis.within_customer_comparison(standard, [0], [5, 10])
+    wc_deep = analysis.within_customer_comparison(standard, [5, 10], [15, 20, 25])
+    wc_5v10 = analysis.within_customer_comparison(standard, [5], [10])
+    cap10_savings = analysis.discount_cap_savings(lines, cap=0.10)
     total_discount = lines["DiscountAmount"].sum()
     gross = lines["GrossRevenue"].sum()
     cap_savings = analysis.discount_cap_savings(lines, cap=0.05)
@@ -164,6 +170,12 @@ def run(data_path, out_dir, site_dir):
         "customers_for_80pct": n_for_80,
         "total_discount": round(float(total_discount), 2),
         "discount_cap_5pct_savings": round(float(cap_savings), 2),
+        "discount_cap_10pct_savings": round(float(cap10_savings), 2),
+        "discount_slope_per_pt": round(slope, 4),
+        "discount_slope_ci": [round(slope_lo, 4), round(slope_hi, 4)],
+        "within_customer_0_vs_5_10": wc_any,
+        "within_customer_5_10_vs_15_25": wc_deep,
+        "within_customer_5_vs_10": wc_5v10,
         "late_rate_14d_pct": round(float(window.loc[14, "LateRatePct"]), 1),
         "late_rate_28d_pct": round(float(window.loc[28, "LateRatePct"]), 1),
         "stockout_risk_products": int(len(at_risk)),
@@ -225,13 +237,18 @@ def run(data_path, out_dir, site_dir):
         # Q3
         fig_discount=fig_html(figures.fig_discount_box(standard, by_level), "fig-discount"),
         discount_table=html_table(
-            by_level,
-            ["DiscountPct", "Lines", "MeanRelativeQty", "MedianRelativeQty", "DiscountGiven"],
+            by_level.assign(
+                MeanCI=[f"{lo:.2f}–{hi:.2f}" for lo, hi in
+                        zip(by_level["MeanCILow"], by_level["MeanCIHigh"])]
+            ),
+            ["DiscountPct", "Lines", "MeanRelativeQty", "MeanCI", "MedianRelativeQty",
+             "DiscountGiven"],
             {"DiscountPct": lambda v: f"{int(v)}%", "Lines": fmt_int,
-             "MeanRelativeQty": lambda v: f"{v:.2f}", "MedianRelativeQty": lambda v: f"{v:.2f}",
+             "MeanRelativeQty": lambda v: f"{v:.2f}",
+             "MedianRelativeQty": lambda v: f"{v:.2f}",
              "DiscountGiven": fmt_money},
-            ["Discount", "Order lines", "Mean relative qty", "Median relative qty",
-             "Revenue given away"],
+            ["Discount", "Order lines", "Mean relative qty", "95% CI of mean",
+             "Median relative qty", "Revenue given away"],
         ),
         total_discount=money(total_discount),
         discount_of_gross=pct(total_discount / gross * 100, 1),
@@ -241,6 +258,22 @@ def run(data_path, out_dir, site_dir):
         rq25=f"{level.loc[25, 'MeanRelativeQty']:.2f}",
         deep_discount_share=pct(deep_discount_share),
         cap_savings=money(cap_savings),
+        cap10_savings=money(cap10_savings),
+        cap10_savings_pct=pct(cap10_savings / lines["Revenue"].sum() * 100, 1),
+        cap_gap=money(cap_savings - cap10_savings),
+        ci5=f"{level.loc[5, 'MeanCILow']:.2f}–{level.loc[5, 'MeanCIHigh']:.2f}",
+        ci10=f"{level.loc[10, 'MeanCILow']:.2f}–{level.loc[10, 'MeanCIHigh']:.2f}",
+        slope=f"{slope:+.3f}",
+        slope_ci=f"{slope_lo:+.3f} to {slope_hi:+.3f}",
+        wc_deep_n=wc_deep["customers"],
+        wc_deep_diff=f"{wc_deep['median_diff']:+.2f}",
+        wc_deep_share=pct(wc_deep["share_higher"] * 100),
+        wc_any_n=wc_any["customers"],
+        wc_any_diff=f"{wc_any['median_diff']:+.2f}",
+        wc_any_share=pct(wc_any["share_higher"] * 100),
+        wc_5v10_n=wc_5v10["customers"],
+        wc_5v10_diff=f"{wc_5v10['median_diff']:+.2f}",
+        wc_5v10_share=pct(wc_5v10["share_higher"] * 100),
         cap_savings_pct=pct(cap_savings / lines["Revenue"].sum() * 100, 1),
         n_odd_discounts=int((~lines["Discount"].round(2).isin(analysis.STANDARD_DISCOUNTS)).sum()),
         # Q4
