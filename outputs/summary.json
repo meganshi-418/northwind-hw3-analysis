@@ -1,0 +1,16 @@
+{
+  "total_revenue": 1265793.04,
+  "orders": 830,
+  "customers_with_orders": 89,
+  "janapr_1997": 191321.88,
+  "janapr_1998": 422290.24,
+  "top3_share_pct": 25.2,
+  "top10_share_pct": 45.0,
+  "customers_for_80pct": 34,
+  "total_discount": 88665.55,
+  "discount_cap_5pct_savings": 58483.89,
+  "late_rate_14d_pct": 17.6,
+  "late_rate_28d_pct": 3.7,
+  "stockout_risk_products": 29,
+  "active_products": 69
+}
